@@ -17,7 +17,7 @@ import java.util.List;
 
 //@Component
 @AllArgsConstructor
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter {
 
     private final JwtUtil jwtUtil;
     private static final List<String> PUBLIC_PATHS = List.of(
@@ -27,7 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private boolean isPublic(String path) {
         return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
     }
-    @Override
+
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();

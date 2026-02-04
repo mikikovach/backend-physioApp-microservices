@@ -30,12 +30,11 @@ public class UserController {
     }
 
     @PutMapping("/edit")
-    public ResponseEntity<UserResponseDTO> updateUser(@RequestBody UpdateUserDTO updateUserDTO, HttpServletRequest request
-//                                                      @RequestHeader("X-User-Email") String email
+    public ResponseEntity<UserResponseDTO> updateUser(@RequestBody UpdateUserDTO updateUserDTO,
+                                                      @RequestHeader("X-User-Email") String email
 
     ) {
-
-        Long userId = userService.getUserIdByUsername(request.getAttribute("email").toString());
+        Long userId = userService.getUserIdByUsername(email);
         UserResponseDTO userResponseDTO = userService.editUser(userId, updateUserDTO);
 
         return new ResponseEntity<>(userResponseDTO, HttpStatus.OK);

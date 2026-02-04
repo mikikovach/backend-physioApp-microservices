@@ -1,6 +1,8 @@
 package it.eng.reservations_service.controller;
 
 import it.eng.reservations_service.dto.ReservationDTO;
+import it.eng.reservations_service.dto.ReservationViewDTO;
+import it.eng.reservations_service.entity.Reservation;
 import it.eng.reservations_service.service.ReservationsService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,12 +38,12 @@ public class ReservationController {
     @PostMapping
     public ResponseEntity<Void> createReservation(@RequestBody Long slotId, @RequestHeader("X-User-Id") Long userId) {
         log.info("Creating reservation for userId: " + userId + " and slotId: " + slotId);
-        reservationService.createReservation(userId, slotId);
+        reservationService.createReservation(userId, slotId).block();
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @GetMapping("/my-reservations")
-    public List<ReservationDTO> getMyReservations(@RequestHeader("X-User-Id") String userId) {
+    public List<ReservationViewDTO> getMyReservations(@RequestHeader("X-User-Id") String userId) {
         return reservationService.getMyReservations(Long.parseLong(userId));
     }
 

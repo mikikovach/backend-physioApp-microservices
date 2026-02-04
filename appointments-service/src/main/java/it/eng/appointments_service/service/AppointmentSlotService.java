@@ -20,4 +20,8 @@ public interface AppointmentSlotService {
     void reserveSlot(Long slotId);
 
     AppointmentSlotDTO getBySlotId(Long slotId);
+
+    AppointmentSlot getReleasableSlot(Long slotId);
+
+    void releaseSlot(Long slotId);
 }

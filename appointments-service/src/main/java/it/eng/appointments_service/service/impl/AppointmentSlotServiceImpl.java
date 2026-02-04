@@ -6,6 +6,7 @@ import it.eng.appointments_service.dto.SlotAvailabilityResponse;
 import it.eng.appointments_service.entity.AppointmentSlot;
 import it.eng.appointments_service.exception.SlotAlreadyBookedException;
 import it.eng.appointments_service.exception.SlotInPastException;
+import it.eng.appointments_service.exception.SlotNotBookedException;
 import it.eng.appointments_service.exception.SlotNotFoundException;
 import it.eng.appointments_service.mapper.AppointmentSlotMapper;
 import it.eng.appointments_service.repository.AppointmentSlotRepository;
@@ -47,7 +48,7 @@ public class AppointmentSlotServiceImpl implements AppointmentSlotService {
         AppointmentSlot slot = appointmentSlotRepository.findById(slotId)
                 .orElseThrow(() -> new SlotNotFoundException("Slot not found with id: " + slotId));
 
-        log.info("Slot found: {}", slot);
+        log.info("Slot found: {}", slot.toString());
 
         if (slot.isReserved()) {
             throw new SlotAlreadyBookedException("Slot already booked");
@@ -77,14 +78,43 @@ public class AppointmentSlotServiceImpl implements AppointmentSlotService {
         return slot;
     }
 
+    @Override
+    public AppointmentSlot getReleasableSlot(Long slotId) {
+
+        AppointmentSlot slot = appointmentSlotRepository.findById(slotId)
+                .orElseThrow(() -> new SlotNotFoundException("Slot not found with id: " + slotId));
+
+        log.info("Found slot for release: {}", slot);
+
+        if (!slot.isReserved()) {
+            throw new SlotNotBookedException("Slot is not booked at all");
+        }
+        if (slot.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new SlotInPastException("Slot in the past");
+        }
+
+        return slot;
+    }
+
 
     @Transactional
     @Override
     public void reserveSlot(Long slotId) {
 
+        log.info("Slots service: reserving slot with id: {}", slotId);
         AppointmentSlot slot = getReservableSlot(slotId);
         slot.setReserved(true);
         appointmentSlotRepository.save(slot);
+    }
+
+    @Transactional
+    @Override
+    public void releaseSlot(Long slotId) {
+
+        AppointmentSlot slot = getReleasableSlot(slotId);
+        slot.setReserved(false);
+        appointmentSlotRepository.save(slot);
+        log.info("Slot with id: {} released", slotId);
     }
 
     @Override

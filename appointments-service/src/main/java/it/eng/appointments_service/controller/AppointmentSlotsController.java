@@ -41,6 +41,13 @@ public class AppointmentSlotsController {
 
     }
 
+    @PostMapping("/release/{slotId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void releaseSlot(@PathVariable Long slotId) {
+        appointmentSlotService.releaseSlot(slotId);
+
+    }
+
     @GetMapping("/findSlot/{slotId}")
     public AppointmentSlotDTO getSlotBySlotId(@PathVariable Long slotId) {
        return appointmentSlotService.getBySlotId(slotId);

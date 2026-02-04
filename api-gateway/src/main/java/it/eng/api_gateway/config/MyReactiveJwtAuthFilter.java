@@ -24,7 +24,7 @@ import java.util.List;
 @Component
 @AllArgsConstructor
 @Order(Ordered.HIGHEST_PRECEDENCE)
-public class MyReactiveJwtAuthFilter implements GlobalFilter, Ordered {
+public class MyReactiveJwtAuthFilter implements GlobalFilter{
 
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
@@ -34,16 +34,18 @@ public class MyReactiveJwtAuthFilter implements GlobalFilter, Ordered {
 
     private static final List<String> PUBLIC_PATHS = List.of(
             "/auth/login",
-            "/auth/signup"
+            "/auth/signup",
+            "/physios",
+            "/slots"
     );
     private boolean isPublic(String path) {
         return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
     }
 
-    @Override
-    public int getOrder() {
-        return -1;
-    }
+//    @Override
+//    public int getOrder() {
+//        return -1;
+//    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {

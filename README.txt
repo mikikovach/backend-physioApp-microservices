@@ -9,6 +9,9 @@ Spring Boot backend for appointment booking with physiotherapists.
 - Spring Security
 - Spring Data JPA
 - PostgreSQL
+- Resilience4j
+POST → uses manual reactive control (operator)
+GET → uses declarative resilience (annotation)
 
 ## Status
 PoC / self-learning project

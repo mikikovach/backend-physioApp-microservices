@@ -16,6 +16,8 @@ public class PhysioServiceClient {
         this.webClient = webClient;
     }
 
+
+
     public PhysioDto fetchPhysioByPhysioId(Long physioId) {
 
         log.info("Fetching physiotherapist details for physioId {}", physioId);

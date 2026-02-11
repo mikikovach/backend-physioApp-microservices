@@ -1,9 +1,16 @@
 package it.eng.reservations_service.config;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
+import io.github.resilience4j.reactor.retry.RetryOperator;
+
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryRegistry;
 import it.eng.reservations_service.dto.SlotDto;
 import it.eng.reservations_service.exception.SlotAlreadyReservedInReservationContextException;
 import it.eng.reservations_service.exception.SlotClientException;
 import it.eng.reservations_service.exception.SlotServiceUnavailableException;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
@@ -18,9 +25,13 @@ import reactor.core.publisher.Mono;
 public class SlotServiceClient {
 
     private final WebClient webClient;
+    private final Retry slotRetry;
+    private final CircuitBreaker slotCircuitBreaker;
 
-    public SlotServiceClient(@Qualifier("slotWebClient") WebClient webClient) {
+    public SlotServiceClient(@Qualifier("slotWebClient") WebClient webClient, Retry slotRetry, CircuitBreaker slotCircuitBreaker) {
         this.webClient = webClient;
+        this.slotRetry = slotRetry;
+        this.slotCircuitBreaker = slotCircuitBreaker;
     }
 
     public Mono<Void> reserveSlotRemotely(Long slotId) {
@@ -36,17 +47,23 @@ public class SlotServiceClient {
                         HttpStatusCode::is4xxClientError,
                         response -> response.bodyToMono(String.class)
                                 .defaultIfEmpty("Client error from Slot service")
-                                .map(err -> new SlotClientException(err))
+                                .map(SlotClientException::new)
                 )
                 // SERVER GREŠKE
                 .onStatus(HttpStatusCode::is5xxServerError, response -> Mono.error(new SlotServiceUnavailableException(
                         "Slot service unavailable")))
                 .bodyToMono(Void.class)
+
                 // NETWORK / TIMEOUT / DNS
                 .onErrorMap(
                         WebClientRequestException.class,
                         ex -> new SlotServiceUnavailableException("Slot service unavailable")
-                );
+                )
+//                .transformDeferred(RetryOperator.of(slotRetry))
+                .transformDeferred(CircuitBreakerOperator.of(slotCircuitBreaker));
+
+
+
     }
 
     public SlotDto fetchSlotBySlotId(Long slotId) {

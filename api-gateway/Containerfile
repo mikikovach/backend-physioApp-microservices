@@ -1,0 +1,14 @@
+# Start with a base image containing Java runtime
+FROM eclipse-temurin:21-jre-alpine
+LABEL maintainer="miroslav.kovacevic@eng.it"
+# # Add a volume pointing to /tmp
+# VOLUME /tmp
+WORKDIR /app
+ENV SPRING_PROFILES_ACTIVE=container
+EXPOSE 9191
+ARG JAR_FILE=target/*.jar
+
+# Add the application's jar to the container
+COPY ${JAR_FILE} app.jar
+
+ENTRYPOINT ["java","-jar","app.jar"]

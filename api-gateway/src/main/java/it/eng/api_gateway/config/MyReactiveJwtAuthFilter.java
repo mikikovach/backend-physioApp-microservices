@@ -42,11 +42,6 @@ public class MyReactiveJwtAuthFilter implements GlobalFilter{
         return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
     }
 
-//    @Override
-//    public int getOrder() {
-//        return -1;
-//    }
-
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String path = exchange.getRequest().getURI().getPath();

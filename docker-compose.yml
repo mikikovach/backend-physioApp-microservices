@@ -1,0 +1,157 @@
+version: "3.8"
+
+services:
+
+  eureka-server:
+    image: eureka-server:latest
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - mynet
+
+  api-gateway:
+    image: api-gateway:latest
+    depends_on:
+      - eureka-server
+#    environment:
+#      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+    ports:
+      - "9191:9191"
+    networks:
+      - mynet
+
+  users-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: users
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - users_data:/var/lib/postgresql/data
+      - ./auth-service/init/users:/docker-entrypoint-initdb.d/
+    ports:
+      - "5433:5432"
+    networks:
+      - mynet
+
+  auth-service:
+    image: auth-service:latest
+    depends_on:
+      - users-db
+      - eureka-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:postgresql://users-db:5432/users
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    ports:
+      - "8081:8081"
+    networks:
+      - mynet
+
+  physio-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: physios
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - physio_data:/var/lib/postgresql/data
+      - ./physiotherapists-service/init/physio:/docker-entrypoint-initdb.d/
+    ports:
+      - "5434:5432"
+    networks:
+      - mynet
+
+  physio-service:
+    image: physio-service:latest
+    depends_on:
+      - physio-db
+      - eureka-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:postgresql://physio-db:5432/physios
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    ports:
+      - "8082:8082"
+    networks:
+      - mynet
+
+  slots-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: slots
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - slots_data:/var/lib/postgresql/data
+      - ./appointments-service/init/appointment-slots:/docker-entrypoint-initdb.d/
+    ports:
+      - "5435:5432"
+    networks:
+      - mynet
+
+  slot-service:
+    image: slots-service:latest
+    depends_on:
+      - slots-db
+      - eureka-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:postgresql://slots-db:5432/slots
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    ports:
+      - "8083:8083"
+    networks:
+      - mynet
+
+  reservations-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: reservations
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - reservations_data:/var/lib/postgresql/data
+      - ./reservations-service/init/reservations:/docker-entrypoint-initdb.d/
+    ports:
+      - "5436:5432"
+    networks:
+      - mynet
+
+  reservations-service:
+    image: reservations-service:latest
+    depends_on:
+      - reservations-db
+      - eureka-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka
+      SPRING_DATASOURCE_URL: jdbc:postgresql://reservations-db:5432/reservations
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    ports:
+      - "8084:8084"
+    networks:
+      - mynet
+
+  frontend:
+    image: physio-frontend:latest
+    depends_on:
+      - api-gateway
+    ports:
+      - "4200:80"
+
+networks:
+  mynet:
+    external: true
+
+volumes:
+  users_data:
+  physio_data:
+  slots_data:
+  reservations_data:
+
+

@@ -26,8 +26,9 @@ import java.util.List;
 public class AppointmentSlotServiceImpl implements AppointmentSlotService {
 
     private final AppointmentSlotRepository appointmentSlotRepository;
-
     private final AppointmentSlotMapper appointmentSlotMapper;
+
+    private static final String SLOT_NOT_FOUND_MESSAGE = "Slot not found with id: ";
 
 
     @Override
@@ -46,7 +47,7 @@ public class AppointmentSlotServiceImpl implements AppointmentSlotService {
         log.info("Checking availability  from appointments controller for slot id: {}", slotId);
 
         AppointmentSlot slot = appointmentSlotRepository.findById(slotId)
-                .orElseThrow(() -> new SlotNotFoundException("Slot not found with id: " + slotId));
+                .orElseThrow(() -> new SlotNotFoundException(SLOT_NOT_FOUND_MESSAGE + slotId));
 
         log.info("Slot found: {}", slot.toString());
 
@@ -64,7 +65,7 @@ public class AppointmentSlotServiceImpl implements AppointmentSlotService {
     public AppointmentSlot getReservableSlot(Long slotId) {
 
         AppointmentSlot slot = appointmentSlotRepository.findById(slotId)
-                .orElseThrow(() -> new SlotNotFoundException("Slot not found with id: " + slotId));
+                .orElseThrow(() -> new SlotNotFoundException(SLOT_NOT_FOUND_MESSAGE + slotId));
 
         log.info("Slot found: {}", slot);
 
@@ -82,7 +83,7 @@ public class AppointmentSlotServiceImpl implements AppointmentSlotService {
     public AppointmentSlot getReleasableSlot(Long slotId) {
 
         AppointmentSlot slot = appointmentSlotRepository.findById(slotId)
-                .orElseThrow(() -> new SlotNotFoundException("Slot not found with id: " + slotId));
+                .orElseThrow(() -> new SlotNotFoundException(SLOT_NOT_FOUND_MESSAGE + slotId));
 
         log.info("Found slot for release: {}", slot);
 
@@ -121,6 +122,6 @@ public class AppointmentSlotServiceImpl implements AppointmentSlotService {
     public AppointmentSlotDTO getBySlotId(Long slotId) {
         return appointmentSlotRepository.findById(slotId)
                 .map(appointmentSlotMapper::toDto)
-                .orElseThrow(() -> new SlotNotFoundException("Slot not found with id: " + slotId));
+                .orElseThrow(() -> new SlotNotFoundException(SLOT_NOT_FOUND_MESSAGE + slotId));
     }
 }

@@ -26,16 +26,9 @@ import java.util.List;
 public class ReservationsServiceImpl implements ReservationsService {
 
     private final ReservationsRepository reservationsRepository;
-//    private final WebClient slotWebClient;
-//    private final WebClient reservationWebClient;
-//    private final WebClient physioWebClient;
     private final SlotServiceClient slotServiceClient;
     private final PhysioServiceClient physioServiceClient;
 
-
-
-
-    //    @Transactional
     @Override
     public Mono<Reservation> createReservation(Long userId, Long slotId) {
 
@@ -58,16 +51,6 @@ public class ReservationsServiceImpl implements ReservationsService {
                 );
     }
 
-//    public Mono<Void> releaseSlot(Long slotId) {
-//        return slotWebClient.post()
-//                .uri("/slots/release/{slotId}", slotId)
-//                .retrieve()
-//                .bodyToMono(Void.class)
-//                .onErrorResume(ex -> {
-//                    log.error("Failed to release slot with id {}: {}", slotId, ex.getMessage());
-//                    return Mono.empty();
-//                });
-//    }
 
 
     @Override
@@ -98,21 +81,7 @@ public class ReservationsServiceImpl implements ReservationsService {
 
     }
 
-//    public CanReserveResponse checkAvailability(Long slotId) {
-//        log.info("Check availability metoda u reservation servisu pozvana za slotId: {}", slotId);
-//
-//        CanReserveResponse response = slotWebClient.get()
-//                .uri("http://localhost:8083/slots/availability/" + slotId)
-//                .retrieve()
-//                .bodyToMono(CanReserveResponse.class)
-//                .block();
-//
-//        if (response == null) {
-//            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Unable to check slot availability");
-//        }
-//
-//        return response;
-//    }
+
 
 //    public Mono<Void> reserveSlotRemotely(Long slotId) {
 //        return slotWebClient.post()

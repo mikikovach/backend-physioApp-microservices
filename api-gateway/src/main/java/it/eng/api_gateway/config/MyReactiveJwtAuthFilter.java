@@ -6,6 +6,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import it.eng.api_gateway.error.ApiError;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -24,13 +25,11 @@ import java.util.List;
 @Component
 @AllArgsConstructor
 @Order(Ordered.HIGHEST_PRECEDENCE)
+@Slf4j
 public class MyReactiveJwtAuthFilter implements GlobalFilter{
 
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
-
-//    @Value("${security.jwt.secret-key}")
-//    private String secretKey;
 
     private static final List<String> PUBLIC_PATHS = List.of(
             "/auth/login",
@@ -47,7 +46,7 @@ public class MyReactiveJwtAuthFilter implements GlobalFilter{
         String path = exchange.getRequest().getURI().getPath();
 
         if (isPublic(path)) {
-            System.out.println(" JWT FILTER REACTIVE GATEWAY: Public path accessed: " + path);
+            log.info(" JWT FILTER REACTIVE GATEWAY: Public path accessed: " + path);
             return chain.filter(exchange);
         }
 
@@ -62,9 +61,9 @@ public class MyReactiveJwtAuthFilter implements GlobalFilter{
         try {
             String jwt = authHeader.substring(7);
             String userEmail = jwtUtil.extractUsername(jwt);
-            Long userId = jwtUtil.validateToken(jwt).get("userId", Long.class);;
+            Long userId = jwtUtil.validateToken(jwt).get("userId", Long.class);
 
-            System.out.println(" JWT FILTER REACTIVE GATEWAY: Extracted user email: " + userEmail);
+            log.info(" JWT FILTER REACTIVE GATEWAY: Extracted user email: " + userEmail);
 
             ServerWebExchange mutatedExchange = exchange.mutate()
                     .request(exchange.getRequest().mutate()
@@ -73,7 +72,7 @@ public class MyReactiveJwtAuthFilter implements GlobalFilter{
                             .build())
                     .build();
 
-            System.out.println(" JWT FILTER REACTIVE GATEWAY mutaded rq: " +  mutatedExchange.getRequest().getHeaders());
+            log.info(" JWT FILTER REACTIVE GATEWAY mutaded rq: " +  mutatedExchange.getRequest().getHeaders());
 
             return chain.filter(mutatedExchange);
         } catch (ExpiredJwtException e){

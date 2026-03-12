@@ -2,15 +2,11 @@ package it.eng.reservations_service.config;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
-import io.github.resilience4j.reactor.retry.RetryOperator;
-
 import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryRegistry;
 import it.eng.reservations_service.dto.SlotDto;
 import it.eng.reservations_service.exception.SlotAlreadyReservedInReservationContextException;
 import it.eng.reservations_service.exception.SlotClientException;
 import it.eng.reservations_service.exception.SlotServiceUnavailableException;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;

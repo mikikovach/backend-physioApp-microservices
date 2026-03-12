@@ -3,7 +3,6 @@ package it.eng.appointments_service.controller;
 
 import it.eng.appointments_service.dto.AppointmentSlotDTO;
 import it.eng.appointments_service.dto.SlotAvailabilityResponse;
-import it.eng.appointments_service.entity.AppointmentSlot;
 import it.eng.appointments_service.service.AppointmentSlotService;
 import lombok.AllArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;

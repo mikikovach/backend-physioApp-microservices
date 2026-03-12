@@ -1,16 +1,12 @@
 package it.eng.reservations_service.controller;
 
-import it.eng.reservations_service.dto.ReservationDTO;
 import it.eng.reservations_service.dto.ReservationViewDTO;
-import it.eng.reservations_service.entity.Reservation;
 import it.eng.reservations_service.service.ReservationsService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -23,17 +19,6 @@ public class ReservationController {
 
     ReservationsService reservationService;
 
-//    @GetMapping
-//    public ResponseEntity<List<ReservationDTO>> getAllReservations() {
-//        List<ReservationDTO> reservations = reservationService.getAllReservations();
-//        return new ResponseEntity<>(reservations, HttpStatus.OK);
-//    }
-//
-//    @GetMapping("/{id}")
-//    public ResponseEntity<ReservationDTO> getReservationById(@PathVariable Long id) {
-//        ReservationDTO reservation = reservationService.getReservationById(id);
-//        return new ResponseEntity<>(reservation, HttpStatus.OK);
-//    }
 
     @PostMapping
     public ResponseEntity<Void> createReservation(@RequestBody Long slotId, @RequestHeader("X-User-Id") Long userId) {

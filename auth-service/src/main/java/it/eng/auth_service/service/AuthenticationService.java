@@ -33,17 +33,6 @@ public class AuthenticationService {
         return userRepository.save(user);
     }
 
-//    public User authenticate(LoginUserDto input) {
-//        authenticationManager.authenticate(
-//                new UsernamePasswordAuthenticationToken(
-//                        input.email(),
-//                        input.password()
-//                )
-//        );
-//
-//        return userRepository.findByEmail(input.email())
-//                .orElseThrow( () -> new BadCredentialsException("Invalid email or password") );
-//    }
 
     public LoginResponse buildLoginresponse(User authenticatedUser, String jwtToken, Long expirationTime) {
         return LoginResponse.builder()

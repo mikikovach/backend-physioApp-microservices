@@ -8,6 +8,7 @@ import it.eng.auth_service.service.AuthenticationService;
 import it.eng.auth_service.service.JwtService;
 import it.eng.auth_service.util.LoginResponse;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController()
 @RequestMapping("/auth")
 @AllArgsConstructor
+@Slf4j
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
@@ -36,7 +38,7 @@ public class AuthenticationController {
      @PostMapping("/login")
      public ResponseEntity<LoginResponse> login(@RequestBody LoginUserDto loginUserDto) {
 
-         System.out.println(" Auth kontroler : " + loginUserDto.email());
+         log.info("Auth kontroler: ", loginUserDto.email());
          User authenticatedUser = authenticationService.authenticate(loginUserDto);
          String jwtToken = jwtService.generateToken(authenticatedUser);
 

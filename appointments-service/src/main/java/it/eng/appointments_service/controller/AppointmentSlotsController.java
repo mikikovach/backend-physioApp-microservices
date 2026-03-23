@@ -26,6 +26,11 @@ public class AppointmentSlotsController {
         List<AppointmentSlotDTO> availableSlots = appointmentSlotService.getAvailableSlotsByTherapistAndDate(physioId, date);
         return new ResponseEntity<>(availableSlots, HttpStatus.OK);
     }
+    @GetMapping("admin/{physioId}")
+    public ResponseEntity<List<AppointmentSlotDTO>> getAvailableSlotsForAdminByPhysio(@PathVariable Long physioId, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<AppointmentSlotDTO> availableSlots = appointmentSlotService.getAvailableSlotsForAdminByTherapistAndDate(physioId, date);
+        return new ResponseEntity<>(availableSlots, HttpStatus.OK);
+    }
 
     @GetMapping("/availability/{slotId}")
     public SlotAvailabilityResponse checkSlotAvailability(@PathVariable Long slotId) {
@@ -50,6 +55,13 @@ public class AppointmentSlotsController {
     @GetMapping("/findSlot/{slotId}")
     public AppointmentSlotDTO getSlotBySlotId(@PathVariable Long slotId) {
        return appointmentSlotService.getBySlotId(slotId);
+
+    }
+
+    @PostMapping("/insert")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void insertNewSlots(@RequestBody List<AppointmentSlotDTO> slotDTOList) {
+        appointmentSlotService.insertSlots(slotDTOList);
 
     }
 

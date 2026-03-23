@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import java.util.List;
 
 
 @Component
@@ -38,4 +39,7 @@ public class JwtUtil {
         return validateToken(token).getExpiration().before(new Date());
     }
 
+    public List<String> extractRoles(String token) {
+      return validateToken(token).get("roles", List.class);
+    }
 }

@@ -43,6 +43,25 @@ public class AppointmentSlotServiceImpl implements AppointmentSlotService {
     }
 
     @Override
+    public List<AppointmentSlotDTO> getAvailableSlotsForAdminByTherapistAndDate(Long physioId, LocalDate date) {
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(23, 59, 59);
+        return appointmentSlotRepository.findByPhysioIdAndStartTimeBetween(physioId, startOfDay, endOfDay)
+                .stream()
+                .map(appointmentSlotMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public List<AppointmentSlot> insertSlots(List<AppointmentSlotDTO> slotDTOList) {
+        log.info("Inserting slots...");
+        List<AppointmentSlot> slots = slotDTOList.stream()
+                .map(appointmentSlotMapper::toEntity)
+                .toList();
+       return appointmentSlotRepository.saveAll(slots);
+    }
+
+    @Override
     public SlotAvailabilityResponse checkAvailability(Long slotId) {
         log.info("Checking availability  from appointments controller for slot id: {}", slotId);
 
@@ -117,6 +136,8 @@ public class AppointmentSlotServiceImpl implements AppointmentSlotService {
         appointmentSlotRepository.save(slot);
         log.info("Slot with id: {} released", slotId);
     }
+
+
 
     @Override
     public AppointmentSlotDTO getBySlotId(Long slotId) {

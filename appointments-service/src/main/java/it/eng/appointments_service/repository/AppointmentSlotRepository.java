@@ -10,4 +10,5 @@ import java.util.List;
 public interface AppointmentSlotRepository extends JpaRepository<AppointmentSlot, Long> {
 
     List<AppointmentSlot> findByPhysioIdAndReservedFalseAndStartTimeBetween(Long therapistId, LocalDateTime dayStart, LocalDateTime dayEnd);
+    List<AppointmentSlot> findByPhysioIdAndStartTimeBetween(Long therapistId, LocalDateTime dayStart, LocalDateTime dayEnd);
 }

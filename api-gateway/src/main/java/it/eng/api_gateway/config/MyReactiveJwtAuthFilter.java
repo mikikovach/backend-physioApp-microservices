@@ -62,8 +62,13 @@ public class MyReactiveJwtAuthFilter implements GlobalFilter{
             String jwt = authHeader.substring(7);
             String userEmail = jwtUtil.extractUsername(jwt);
             Long userId = jwtUtil.validateToken(jwt).get("userId", Long.class);
+            List<String> roles = jwtUtil.extractRoles(jwt);
 
             log.info(" JWT FILTER REACTIVE GATEWAY: Extracted user email: " + userEmail);
+
+            if (path.startsWith("/admin") && (roles == null || !roles.contains("ROLE_ADMIN"))) {
+                return returnResponseMessage(exchange, "Access denied: Admin role required", HttpStatus.FORBIDDEN);
+            }
 
             ServerWebExchange mutatedExchange = exchange.mutate()
                     .request(exchange.getRequest().mutate()
@@ -76,9 +81,9 @@ public class MyReactiveJwtAuthFilter implements GlobalFilter{
 
             return chain.filter(mutatedExchange);
         } catch (ExpiredJwtException e){
-            return unauthorized(exchange, "Token has expired");
+            return returnResponseMessage(exchange, "Token has expired", HttpStatus.UNAUTHORIZED);
         } catch (JwtException e) {
-            return unauthorized(exchange, "Invalid token");
+            return returnResponseMessage(exchange, "Invalid token", HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
             exchange.getResponse().setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
             return exchange.getResponse().setComplete();
@@ -88,14 +93,13 @@ public class MyReactiveJwtAuthFilter implements GlobalFilter{
     }
 
 
-
-    private Mono<Void> unauthorized(ServerWebExchange exchange, String message) {
+    private Mono<Void> returnResponseMessage(ServerWebExchange exchange, String message, HttpStatus status) {
         ServerHttpResponse response = exchange.getResponse();
-        response.setStatusCode(HttpStatus.UNAUTHORIZED);
+        response.setStatusCode(status);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
         ApiError apiError = new ApiError(
-                HttpStatus.UNAUTHORIZED,
+                status,
                 message,
                 exchange.getRequest().getPath().value()
         );
@@ -110,4 +114,28 @@ public class MyReactiveJwtAuthFilter implements GlobalFilter{
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
     }
+
+
+
+//    private Mono<Void> unauthorized(ServerWebExchange exchange, String message) {
+//        ServerHttpResponse response = exchange.getResponse();
+//        response.setStatusCode(HttpStatus.UNAUTHORIZED);
+//        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+//
+//        ApiError apiError = new ApiError(
+//                HttpStatus.UNAUTHORIZED,
+//                message,
+//                exchange.getRequest().getPath().value()
+//        );
+//
+//        byte[] bytes;
+//        try {
+//            bytes = objectMapper.writeValueAsBytes(apiError);
+//        } catch (JsonProcessingException e) {
+//            return response.setComplete(); // fallback
+//        }
+//
+//        DataBuffer buffer = response.bufferFactory().wrap(bytes);
+//        return response.writeWith(Mono.just(buffer));
+//    }
 }

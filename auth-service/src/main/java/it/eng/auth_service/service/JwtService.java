@@ -34,6 +34,7 @@ public class JwtService {
 
     public String generateToken(Map<String, Object> extraClaims, User user) {
         extraClaims.put("userId", user.getUserId());
+        extraClaims.put("roles", user.getRoles().stream().map( role -> role.getName().name()).toList());
         return buildToken(extraClaims, user.getEmail(), jwtExpiration);
     }
 

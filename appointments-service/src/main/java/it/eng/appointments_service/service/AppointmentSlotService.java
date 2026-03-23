@@ -24,4 +24,8 @@ public interface AppointmentSlotService {
     AppointmentSlot getReleasableSlot(Long slotId);
 
     void releaseSlot(Long slotId);
+
+    List<AppointmentSlotDTO> getAvailableSlotsForAdminByTherapistAndDate(Long physioId, LocalDate date);
+
+    List<AppointmentSlot> insertSlots(List<AppointmentSlotDTO> slotDTOList);
 }

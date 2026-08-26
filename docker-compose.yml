@@ -1,8 +1,9 @@
-version: "3.8"
-
 services:
 
   eureka-server:
+    build:
+      context: ./service-registry-eureka
+      dockerfile: Containerfile
     image: eureka-server:latest
     container_name: eureka-server
     ports:
@@ -11,6 +12,9 @@ services:
       - mynet
 
   api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Containerfile
     image: api-gateway:latest
     depends_on:
       - eureka-server
@@ -36,6 +40,9 @@ services:
       - mynet
 
   auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Containerfile
     image: auth-service:latest
     depends_on:
       - users-db
@@ -65,6 +72,9 @@ services:
       - mynet
 
   physio-service:
+    build:
+      context: ./physiotherapists-service
+      dockerfile: Containerfile
     image: physio-service:latest
     depends_on:
       - physio-db
@@ -94,6 +104,9 @@ services:
       - mynet
 
   slot-service:
+    build:
+      context: ./appointments-service
+      dockerfile: Containerfile
     image: slots-service:latest
     depends_on:
       - slots-db
@@ -123,6 +136,9 @@ services:
       - mynet
 
   reservations-service:
+    build:
+      context: ./reservations-service
+      dockerfile: Containerfile
     image: reservations-service:latest
     depends_on:
       - reservations-db
@@ -138,6 +154,8 @@ services:
       - mynet
 
   frontend:
+    build:
+      context: ./frontend
     image: physio-frontend:latest
     depends_on:
       - api-gateway
@@ -146,7 +164,6 @@ services:
 
 networks:
   mynet:
-    external: true
 
 volumes:
   users_data:

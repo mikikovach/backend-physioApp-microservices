@@ -26,7 +26,7 @@ public class AppointmentSlotsController {
         List<AppointmentSlotDTO> availableSlots = appointmentSlotService.getAvailableSlotsByTherapistAndDate(physioId, date);
         return new ResponseEntity<>(availableSlots, HttpStatus.OK);
     }
-    @GetMapping("admin/{physioId}")
+    @GetMapping("/admin/{physioId}")
     public ResponseEntity<List<AppointmentSlotDTO>> getAvailableSlotsForAdminByPhysio(@PathVariable Long physioId, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         List<AppointmentSlotDTO> availableSlots = appointmentSlotService.getAvailableSlotsForAdminByTherapistAndDate(physioId, date);
         return new ResponseEntity<>(availableSlots, HttpStatus.OK);

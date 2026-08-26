@@ -26,14 +26,6 @@
             <column name="user_id" value="8"/>
             <column name="role_id" value="2"/>
         </insert>
-        <insert tableName="users_roles">
-            <column name="user_id" value="21"/>
-            <column name="role_id" value="1"/>
-        </insert>
-        <insert tableName="users_roles">
-            <column name="user_id" value="22"/>
-            <column name="role_id" value="1"/>
-        </insert>
 
     </changeSet>
 

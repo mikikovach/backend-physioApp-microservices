@@ -12,6 +12,7 @@ import java.util.List;
 public interface PhysioMapper {
     @Mapping(source="id", target="physioId")
     PhysiotherapistDTO toDto(Physiotherapist physiotherapist);
+    @Mapping(source="physioId", target="id")
     Physiotherapist toEntity(PhysiotherapistDTO physiotherapistDTO);
     List<PhysiotherapistDTO> toDtoList(List<Physiotherapist> physiotherapists);
     List<Physiotherapist> toEntityList(List<PhysiotherapistDTO> physiotherapistDTOs);

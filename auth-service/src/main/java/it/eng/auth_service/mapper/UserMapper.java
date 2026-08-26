@@ -5,6 +5,7 @@ import it.eng.auth_service.dto.UserDTO;
 import it.eng.auth_service.dto.UserResponseDTO;
 import it.eng.auth_service.entity.User;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import java.util.List;
@@ -18,5 +19,8 @@ public interface UserMapper {
     List<User> toEntityList(List<UserDTO> userDTOs);
 
 
+    @Mapping(target = "password", ignore = true)
+    @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "roles", ignore = true)
     User updateUserFromDto(UpdateUserDTO updateUserDTO, @MappingTarget User user);
 }

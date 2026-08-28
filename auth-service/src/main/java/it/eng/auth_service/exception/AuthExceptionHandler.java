@@ -5,9 +5,15 @@ import io.jsonwebtoken.JwtException;
 import it.eng.auth_service.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestControllerAdvice
 public class AuthExceptionHandler {
@@ -15,7 +21,7 @@ public class AuthExceptionHandler {
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFound(NotFoundException ex, HttpServletRequest request) {
-            return new ErrorResponse("NOT_FOUND");
+        return new ErrorResponse("NOT_FOUND");
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
@@ -45,6 +51,22 @@ public class AuthExceptionHandler {
     public ErrorResponse handleJwt(JwtException ex, HttpServletRequest request) {
 
         return new ErrorResponse("JWT_INVALID");
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        List<FieldError> fieldErrorList = ex.getBindingResult().getFieldErrors();
+        Map<String, String> fieldErrors = new LinkedHashMap<>();
+
+        for (FieldError fieldError : fieldErrorList) {
+            String errorMessage = fieldError.getDefaultMessage() == null
+                    ? "Invalid value"
+                    : fieldError.getDefaultMessage();
+            fieldErrors.put(fieldError.getField(), errorMessage);
+        }
+
+        return new ErrorResponse("VALIDATION_ERROR", Map.copyOf(fieldErrors));
     }
 
 

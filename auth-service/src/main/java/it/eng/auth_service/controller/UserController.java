@@ -3,6 +3,7 @@ package it.eng.auth_service.controller;
 import it.eng.auth_service.dto.UpdateUserDTO;
 import it.eng.auth_service.dto.UserResponseDTO;
 import it.eng.auth_service.service.UserService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class UserController {
     }
 
     @PutMapping("/edit")
-    public ResponseEntity<UserResponseDTO> updateUser(@RequestBody UpdateUserDTO updateUserDTO,
+    public ResponseEntity<UserResponseDTO> updateUser(@Valid @RequestBody UpdateUserDTO updateUserDTO,
                                                       @RequestHeader("X-User-Email") String email
 
     ) {

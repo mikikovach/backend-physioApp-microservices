@@ -1,4 +1,10 @@
 package it.eng.auth_service.dto;
 
-public record ErrorResponse(String errorMessage) {
+import java.util.Map;
+
+public record ErrorResponse(String errorMessage, Map<String, String> fieldErrors) {
+
+	public ErrorResponse(String errorMessage) {
+		this(errorMessage, Map.of());
+	}
 }

@@ -110,5 +110,51 @@ class AuthDtoValidationTest {
         assertEquals("email must be valid", violationMap.get("email"));
         assertEquals("password is required", violationMap.get("password"));
     }
+
+    @Test
+    @DisplayName("UpdateUserDTO passes validation when all update fields are valid")
+    void validateUpdateUserDto_ShouldHaveNoViolations_WhenPayloadIsValid() {
+        UpdateUserDTO updateUserDTO = new UpdateUserDTO(
+                "John",
+                "Doe",
+                "john.doe@example.com",
+                LocalDate.of(1990, 1, 1),
+                "Main Street 1",
+                "Belgrade",
+                11000L);
+
+        Set<ConstraintViolation<UpdateUserDTO>> violations = validator.validate(updateUserDTO);
+
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    @DisplayName("UpdateUserDTO fails validation for blank names, bad email, future birth date and invalid postal code")
+    void validateUpdateUserDto_ShouldReturnExpectedViolations_WhenPayloadIsInvalid() {
+        UpdateUserDTO updateUserDTO = new UpdateUserDTO(
+                "",
+                "",
+                "invalid-email",
+                LocalDate.now().plusDays(1),
+                "",
+                "",
+                0L);
+
+        Set<ConstraintViolation<UpdateUserDTO>> violations = validator.validate(updateUserDTO);
+        Map<String, String> violationMap = violations.stream()
+                .collect(Collectors.toMap(
+                        violation -> violation.getPropertyPath().toString(),
+                        ConstraintViolation::getMessage,
+                        (firstMessage, ignoredMessage) -> firstMessage));
+
+        assertEquals(7, violations.size());
+        assertEquals("firstName is required", violationMap.get("firstName"));
+        assertEquals("lastName is required", violationMap.get("lastName"));
+        assertEquals("email must be valid", violationMap.get("email"));
+        assertEquals("birthDate must be in the past", violationMap.get("birthDate"));
+        assertEquals("street is required", violationMap.get("street"));
+        assertEquals("city is required", violationMap.get("city"));
+        assertEquals("postalCode must be positive", violationMap.get("postalCode"));
+    }
 }
 

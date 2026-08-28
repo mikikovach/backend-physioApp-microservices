@@ -7,6 +7,7 @@ import it.eng.auth_service.entity.User;
 import it.eng.auth_service.service.AuthenticationService;
 import it.eng.auth_service.service.JwtService;
 import it.eng.auth_service.util.LoginResponse;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ public class AuthenticationController {
 
 
      @PostMapping("/signup")
-     public ResponseEntity<LoginResponse> signup(@RequestBody UserDTO registerUserDto) {
+     public ResponseEntity<LoginResponse> signup(@Valid @RequestBody UserDTO registerUserDto) {
          User registeredUser  = authenticationService.signup(registerUserDto);
          String jwtToken = jwtService.generateToken(registeredUser);
          LoginResponse loginResponse = authenticationService.buildLoginresponse(registeredUser, jwtToken, jwtService.getExpirationTime());
@@ -36,7 +37,7 @@ public class AuthenticationController {
 
 
      @PostMapping("/login")
-     public ResponseEntity<LoginResponse> login(@RequestBody LoginUserDto loginUserDto) {
+     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginUserDto loginUserDto) {
 
          log.info("Auth kontroler: ", loginUserDto.email());
          User authenticatedUser = authenticationService.authenticate(loginUserDto);

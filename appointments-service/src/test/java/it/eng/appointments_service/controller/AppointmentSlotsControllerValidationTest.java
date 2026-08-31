@@ -131,6 +131,24 @@ class AppointmentSlotsControllerValidationTest {
     }
 
     @Test
+    @DisplayName("Admin date-based endpoint returns 400 when date query is missing")
+    void getAvailableSlotsForAdmin_ShouldReturnBadRequest_WhenDateQueryIsMissing() throws Exception {
+        mockMvc.perform(get("/slots/admin/1"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(appointmentSlotService);
+    }
+
+    @Test
+    @DisplayName("Date-based endpoint returns 400 when date query is invalid")
+    void getAvailableSlotsByPhysio_ShouldReturnBadRequest_WhenDateQueryIsInvalid() throws Exception {
+        mockMvc.perform(get("/slots/1").queryParam("date", "not-a-date"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(appointmentSlotService);
+    }
+
+    @Test
     @DisplayName("Admin date-based endpoint returns 400 when date query is invalid")
     void getAvailableSlotsForAdmin_ShouldReturnBadRequest_WhenDateQueryIsInvalid() throws Exception {
         mockMvc.perform(get("/slots/admin/1").queryParam("date", "not-a-date"))

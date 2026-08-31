@@ -25,6 +25,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,6 +39,12 @@ class SlotsExceptionHandlerTest {
 
     @Mock
     private Path propertyPath;
+
+    @Mock
+    private ConstraintViolation<Object> secondConstraintViolation;
+
+    @Mock
+    private Path secondPropertyPath;
 
     private final SlotsExceptionHandler slotsExceptionHandler = new SlotsExceptionHandler();
 
@@ -58,6 +65,8 @@ class SlotsExceptionHandlerTest {
 
         ApiError apiError = slotsExceptionHandler.handleMethodArgumentNotValid(exception, httpServletRequest).getBody();
 
+        assertNotNull(apiError);
+
         assertEquals(HttpStatus.BAD_REQUEST.value(), apiError.getStatus());
         assertEquals("Bad Request", apiError.getError());
         assertEquals("physioId: must not be null; startTime: must not be null", apiError.getMessage());
@@ -76,11 +85,55 @@ class SlotsExceptionHandlerTest {
 
         ApiError apiError = slotsExceptionHandler.handleConstraintViolationException(exception, httpServletRequest).getBody();
 
+        assertNotNull(apiError);
+
         assertEquals(HttpStatus.BAD_REQUEST.value(), apiError.getStatus());
         assertEquals("Bad Request", apiError.getError());
         assertEquals("slotId: must be greater than 0", apiError.getMessage());
         assertEquals("/slots/reserve/0", apiError.getPath());
         assertFalse(apiError.getMessage().contains("java."));
+    }
+
+    @Test
+    @DisplayName("Uses fallback message when path validation message is missing")
+    void handleConstraintViolationException_ShouldUseFallbackMessage_WhenViolationMessageIsBlank() {
+        when(propertyPath.toString()).thenReturn("getAvailableSlotsByPhysio.physioId");
+        when(constraintViolation.getPropertyPath()).thenReturn(propertyPath);
+        when(constraintViolation.getMessage()).thenReturn(" ");
+        when(httpServletRequest.getRequestURI()).thenReturn("/slots/0");
+
+        ConstraintViolationException exception = new ConstraintViolationException(Set.of(constraintViolation));
+
+        ApiError apiError = slotsExceptionHandler.handleConstraintViolationException(exception, httpServletRequest).getBody();
+
+        assertNotNull(apiError);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), apiError.getStatus());
+        assertEquals("physioId: Invalid value", apiError.getMessage());
+        assertEquals("/slots/0", apiError.getPath());
+    }
+
+    @Test
+    @DisplayName("Sorts path validation messages deterministically")
+    void handleConstraintViolationException_ShouldSortMessagesByPath_WhenMultipleViolationsExist() {
+        when(propertyPath.toString()).thenReturn("insertNewSlots.slotDTOList[0].startTime");
+        when(constraintViolation.getPropertyPath()).thenReturn(propertyPath);
+        when(constraintViolation.getMessage()).thenReturn("must be in the future");
+
+        when(secondPropertyPath.toString()).thenReturn("insertNewSlots.slotDTOList[0].physioId");
+        when(secondConstraintViolation.getPropertyPath()).thenReturn(secondPropertyPath);
+        when(secondConstraintViolation.getMessage()).thenReturn("must be greater than 0");
+        when(httpServletRequest.getRequestURI()).thenReturn("/slots/insert");
+
+        ConstraintViolationException exception = new ConstraintViolationException(Set.of(constraintViolation, secondConstraintViolation));
+
+        ApiError apiError = slotsExceptionHandler.handleConstraintViolationException(exception, httpServletRequest).getBody();
+
+        assertNotNull(apiError);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), apiError.getStatus());
+        assertEquals("physioId: must be greater than 0; startTime: must be in the future", apiError.getMessage());
+        assertEquals("/slots/insert", apiError.getPath());
     }
 
     @Test
@@ -91,12 +144,15 @@ class SlotsExceptionHandlerTest {
 
         ApiError apiError = slotsExceptionHandler.handleSlotNotFoundException(exception, httpServletRequest).getBody();
 
+        assertNotNull(apiError);
+
         assertEquals(HttpStatus.NOT_FOUND.value(), apiError.getStatus());
         assertEquals("Not Found", apiError.getError());
         assertEquals("Slot not found", apiError.getMessage());
         assertEquals("/slots/findSlot/999", apiError.getPath());
     }
 
+    @SuppressWarnings("unused")
     private void sampleValidatedMethod(@Valid AppointmentSlotDTO appointmentSlotDTO) {
         // Reflection-only helper for constructing MethodArgumentNotValidException in unit tests.
     }

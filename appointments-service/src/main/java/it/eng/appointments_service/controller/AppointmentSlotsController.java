@@ -2,7 +2,9 @@ package it.eng.appointments_service.controller;
 
 
 import it.eng.appointments_service.dto.AppointmentSlotDTO;
+import it.eng.appointments_service.dto.AppointmentSlotInsertRequest;
 import it.eng.appointments_service.dto.SlotAvailabilityResponse;
+import it.eng.appointments_service.mapper.AppointmentSlotMapper;
 import it.eng.appointments_service.service.AppointmentSlotService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -26,6 +28,7 @@ public class AppointmentSlotsController {
 
 
     private final AppointmentSlotService appointmentSlotService;
+    private final AppointmentSlotMapper appointmentSlotMapper;
 
     @GetMapping("/{physioId}")
     public ResponseEntity<List<AppointmentSlotDTO>> getAvailableSlotsByPhysio(@PathVariable @NotNull @Positive Long physioId,
@@ -68,8 +71,11 @@ public class AppointmentSlotsController {
 
     @PostMapping("/insert")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void insertNewSlots(@RequestBody @NotEmpty List<@Valid AppointmentSlotDTO> slotDTOList) {
-        appointmentSlotService.insertSlots(slotDTOList);
+    public void insertNewSlots(@Valid @RequestBody @NotEmpty List<@Valid AppointmentSlotInsertRequest> slotDTOList) {
+        List<AppointmentSlotDTO> appointmentSlotDTOS = slotDTOList.stream()
+                .map(appointmentSlotMapper::toSlotDto)
+                .toList();
+        appointmentSlotService.insertSlots(appointmentSlotDTOS);
 
     }
 

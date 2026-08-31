@@ -1,8 +1,10 @@
 package it.eng.appointments_service.controller;
 
 import it.eng.appointments_service.dto.AppointmentSlotDTO;
+import it.eng.appointments_service.dto.AppointmentSlotInsertRequest;
 import it.eng.appointments_service.dto.SlotAvailabilityResponse;
 import it.eng.appointments_service.exception.SlotsExceptionHandler;
+import it.eng.appointments_service.mapper.AppointmentSlotMapper;
 import it.eng.appointments_service.service.AppointmentSlotService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,9 +25,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -36,6 +40,9 @@ class AppointmentSlotsControllerValidationTest {
 
     @Mock
     private AppointmentSlotService appointmentSlotService;
+
+    @Mock
+    private AppointmentSlotMapper appointmentSlotMapper;
 
     @InjectMocks
     private AppointmentSlotsController appointmentSlotsController;
@@ -176,6 +183,49 @@ class AppointmentSlotsControllerValidationTest {
                 .andExpect(jsonPath("$.id").value(2));
 
         verify(appointmentSlotService).getBySlotId(slotId);
+    }
+
+    @Test
+    @DisplayName("Insert endpoint returns 400 for empty list payload")
+    void insertNewSlots_ShouldReturnBadRequest_WhenPayloadListIsEmpty() throws Exception {
+        mockMvc.perform(post("/slots/insert")
+                        .contentType(APPLICATION_JSON)
+                        .content("[]"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+
+        verifyNoInteractions(appointmentSlotService, appointmentSlotMapper);
+    }
+
+    @Test
+    @DisplayName("Insert endpoint returns 400 for invalid list element payload")
+    void insertNewSlots_ShouldReturnBadRequest_WhenListElementIsInvalid() throws Exception {
+        String invalidPayload = "[{\"startTime\":\"2020-01-01T10:00:00\",\"physioId\":0}]";
+
+        mockMvc.perform(post("/slots/insert")
+                        .contentType(APPLICATION_JSON)
+                        .content(invalidPayload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+
+        verifyNoInteractions(appointmentSlotService, appointmentSlotMapper);
+    }
+
+    @Test
+    @DisplayName("Insert endpoint returns 204 and calls service for valid payload")
+    void insertNewSlots_ShouldReturnNoContent_WhenPayloadIsValid() throws Exception {
+        String validPayload = "[{\"startTime\":\"2099-01-01T10:00:00\",\"physioId\":1}]";
+        AppointmentSlotDTO appointmentSlotDTO = new AppointmentSlotDTO(null, LocalDateTime.of(2099, 1, 1, 10, 0), false, 1L);
+
+        when(appointmentSlotMapper.toSlotDto(any(AppointmentSlotInsertRequest.class))).thenReturn(appointmentSlotDTO);
+
+        mockMvc.perform(post("/slots/insert")
+                        .contentType(APPLICATION_JSON)
+                        .content(validPayload))
+                .andExpect(status().isNoContent());
+
+        verify(appointmentSlotMapper).toSlotDto(any(AppointmentSlotInsertRequest.class));
+        verify(appointmentSlotService).insertSlots(List.of(appointmentSlotDTO));
     }
 }
 

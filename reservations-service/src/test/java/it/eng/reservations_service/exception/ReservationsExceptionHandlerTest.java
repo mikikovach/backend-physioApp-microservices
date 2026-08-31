@@ -11,10 +11,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -150,6 +152,55 @@ class ReservationsExceptionHandlerTest {
         LocalDateTime timestamp = response.getBody() == null ? null : response.getBody().getTimestamp();
 
         assertThat(timestamp).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Should return 503 for SlotServiceUnavailableException")
+    void handleSlotServiceUnavailable_ShouldReturn503() {
+        when(httpServletRequest.getRequestURI()).thenReturn("/reservations");
+        SlotServiceUnavailableException exception = new SlotServiceUnavailableException("Slot service unavailable");
+
+        ResponseEntity<ApiError> response = exceptionHandler.handleSlotServiceUnavailable(exception, httpServletRequest);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(503);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getMessage()).isEqualTo("Slot service unavailable");
+        assertThat(response.getBody().getPath()).isEqualTo("/reservations");
+    }
+
+    @Test
+    @DisplayName("Should pass through downstream status and body without stack trace for WebClientResponseException")
+    void handleWebClientException_ShouldPassThroughStatusAndBody() {
+        WebClientResponseException exception = WebClientResponseException.create(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                null,
+                "Downstream not found body".getBytes(),
+                null
+        );
+
+        ResponseEntity<String> response = exceptionHandler.handleWebClientException(exception);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(404);
+        assertThat(response.getBody()).isEqualTo("Downstream not found body");
+        assertThat(response.getBody()).doesNotContain("at it.eng");
+    }
+
+    @Test
+    @DisplayName("Should pass through 409 status for WebClientResponseException conflict")
+    void handleWebClientException_ShouldPassThroughConflictStatus() {
+        WebClientResponseException exception = WebClientResponseException.create(
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                null,
+                "Slot conflict".getBytes(),
+                null
+        );
+
+        ResponseEntity<String> response = exceptionHandler.handleWebClientException(exception);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(409);
+        assertThat(response.getBody()).isEqualTo("Slot conflict");
     }
 }
 

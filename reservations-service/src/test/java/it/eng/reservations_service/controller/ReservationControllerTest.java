@@ -195,12 +195,77 @@ class ReservationControllerTest {
         verify(reservationService).createReservation(7L, 42L);
     }
 
+    @ParameterizedTest
+    @MethodSource("invalidPostUserIdHeaders")
+    @DisplayName("POST create rejects invalid user ID header patterns before service invocation")
+    void createReservationShouldRejectInvalidUserIdHeader(String headerValue) throws Exception {
+        mockMvc.perform(post(RESERVATIONS_PATH)
+                        .header(USER_ID_HEADER_NAME, headerValue)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"slotId\":42}"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(reservationService);
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidGetUserIdHeaders")
+    @DisplayName("GET my-reservations rejects invalid user ID header patterns before service invocation")
+    void getMyReservationsShouldRejectInvalidUserIdHeaders(String headerValue) throws Exception {
+        mockMvc.perform(get("/reservations/my-reservations")
+                        .header(USER_ID_HEADER_NAME, headerValue))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(reservationService);
+    }
+
+    @Test
+    @DisplayName("DELETE rejects negative reservation ID before service invocation")
+    void cancelReservationShouldRejectNegativeId() throws Exception {
+        mockMvc.perform(delete("/reservations/-1"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(reservationService);
+    }
+
+    @Test
+    @DisplayName("POST create response body contains fieldErrors key on invalid payload")
+    void createReservationShouldReturnFieldErrorsInResponseBodyOnInvalidPayload() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(post(RESERVATIONS_PATH)
+                        .header(USER_ID_HEADER_NAME, "5")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        String responseBody = mvcResult.getResponse().getContentAsString();
+        assertThat(responseBody)
+                .contains("fieldErrors")
+                .doesNotContain("at it.eng");
+    }
+
     private static Stream<Arguments> invalidCreateReservationPayloads() {
         return Stream.of(
                 Arguments.of("{}", "Slot ID is required"),
                 Arguments.of("{\"slotId\":null}", "Slot ID is required"),
                 Arguments.of("{\"slotId\":0}", "Slot ID must be a positive number"),
                 Arguments.of("{\"slotId\":-42}", "Slot ID must be a positive number")
+        );
+    }
+
+    private static Stream<Arguments> invalidPostUserIdHeaders() {
+        return Stream.of(
+                Arguments.of("abc"),
+                Arguments.of("0"),
+                Arguments.of("-5")
+        );
+    }
+
+    private static Stream<Arguments> invalidGetUserIdHeaders() {
+        return Stream.of(
+                Arguments.of("0"),
+                Arguments.of("-3"),
+                Arguments.of("xyz")
         );
     }
 }

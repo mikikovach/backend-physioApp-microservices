@@ -8,11 +8,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
@@ -20,6 +24,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -33,6 +38,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ReservationController tests")
 class ReservationControllerTest {
+
+    private static final String USER_ID_HEADER_NAME = "X-User-Id";
+    private static final String RESERVATIONS_PATH = "/reservations";
 
     private MockMvc mockMvc;
     private LocalValidatorFactoryBean validatorFactoryBean;
@@ -133,7 +141,7 @@ class ReservationControllerTest {
     @Test
     @DisplayName("POST create rejects missing user header before service invocation")
     void createReservationShouldRejectMissingUserHeader() throws Exception {
-        mockMvc.perform(post("/reservations")
+        mockMvc.perform(post(RESERVATIONS_PATH)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{" + "\"slotId\":42" + "}"))
                 .andExpect(status().isBadRequest());
@@ -144,8 +152,8 @@ class ReservationControllerTest {
     @Test
     @DisplayName("POST create rejects overflow user header before service invocation")
     void createReservationShouldRejectOverflowUserHeader() throws Exception {
-        mockMvc.perform(post("/reservations")
-                        .header("X-User-Id", "999999999999999999999999")
+        mockMvc.perform(post(RESERVATIONS_PATH)
+                        .header(USER_ID_HEADER_NAME, "999999999999999999999999")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{" + "\"slotId\":42" + "}"))
                 .andExpect(status().isBadRequest());
@@ -153,18 +161,47 @@ class ReservationControllerTest {
         verifyNoInteractions(reservationService);
     }
 
+    @ParameterizedTest
+    @MethodSource("invalidCreateReservationPayloads")
+    @DisplayName("POST create rejects invalid slotId payloads before service invocation")
+    void createReservationShouldRejectInvalidPayload(String requestBody, String expectedMessage) throws Exception {
+        MvcResult mvcResult = mockMvc.perform(post(RESERVATIONS_PATH)
+                        .header(USER_ID_HEADER_NAME, "7")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        String responseBody = mvcResult.getResponse().getContentAsString();
+
+        verifyNoInteractions(reservationService);
+        assertThat(responseBody)
+                .contains("fieldErrors")
+                .contains("slotId")
+                .contains(expectedMessage);
+    }
+
     @Test
     @DisplayName("POST create accepts a valid user header and invokes the service")
     void createReservationShouldAcceptValidUserHeader() throws Exception {
         when(reservationService.createReservation(7L, 42L)).thenReturn(Mono.empty());
 
-        mockMvc.perform(post("/reservations")
-                        .header("X-User-Id", "7")
+        mockMvc.perform(post(RESERVATIONS_PATH)
+                        .header(USER_ID_HEADER_NAME, "7")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{" + "\"slotId\":42" + "}"))
                 .andExpect(status().isCreated());
 
         verify(reservationService).createReservation(7L, 42L);
+    }
+
+    private static Stream<Arguments> invalidCreateReservationPayloads() {
+        return Stream.of(
+                Arguments.of("{}", "Slot ID is required"),
+                Arguments.of("{\"slotId\":null}", "Slot ID is required"),
+                Arguments.of("{\"slotId\":0}", "Slot ID must be a positive number"),
+                Arguments.of("{\"slotId\":-42}", "Slot ID must be a positive number")
+        );
     }
 }
 
